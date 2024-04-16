@@ -14,23 +14,17 @@ import java.util.concurrent.*;
 
 public class JsonFileStatistics {
 
-    private final Map<String, Integer> stats;
-    private final ExecutorService executor;
-
-    public JsonFileStatistics() {
-        this.stats = new ConcurrentHashMap<>();
-        this.executor = Executors.newFixedThreadPool(4);
-    }
-
     public Map<String, Integer> collectStats(Path folderPath, String attribute) {
         List<File> files = getJsonFiles(folderPath);
+        Map<String, Integer> stats = new ConcurrentHashMap<>();
+        ExecutorService executor = Executors.newFixedThreadPool(8);
 
         List<Future<?>> futures = new ArrayList<>();
 
         for (File file : files) {
             futures.add(executor.submit(() -> {
                 try (JsonParser parser = new JsonFactory().createParser(file)) {
-                    processFields(attribute, parser);
+                    processFields(attribute, parser, stats);
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to parse json file", e);
                 }
@@ -43,27 +37,31 @@ public class JsonFileStatistics {
         return stats;
     }
 
-    private void processFields(String attribute, JsonParser parser) throws IOException {
+    private void processFields(String attribute, JsonParser parser, Map<String, Integer> stats) throws IOException {
         while (parser.nextToken() != JsonToken.END_ARRAY) {
             if (parser.currentToken() == JsonToken.FIELD_NAME && attribute.equals(parser.currentName())) {
-                if (attribute.equals("developer")) {
-                    processDeveloperField(parser);
-                } else {
-                    processField(parser);
-                }
+                handleAttribute(attribute, parser, stats);
             }
         }
     }
 
-    private void processField(JsonParser parser) throws IOException {
-        parser.nextToken();
-        countAttributes(parser.getText(), stats);
+    private void handleAttribute(String attribute, JsonParser parser, Map<String, Integer> stats) throws IOException {
+        if (attribute.equals("developer")) {
+            processDeveloperField(parser, stats);
+        } else {
+            processField(parser, stats);
+        }
     }
 
-    private void processDeveloperField(JsonParser parser) throws IOException {
+    private void processDeveloperField(JsonParser parser, Map<String, Integer> stats) throws IOException {
         parser.nextToken();
         parser.nextToken();
-        processField(parser);
+        processField(parser, stats);
+    }
+
+    private void processField(JsonParser parser, Map<String, Integer> stats) throws IOException {
+        parser.nextToken();
+        countAttributes(parser.getText(), stats);
     }
 
     private void countAttributes(String value, Map<String, Integer> stats) {
@@ -99,5 +97,4 @@ public class JsonFileStatistics {
             }
         }
     }
-
 }

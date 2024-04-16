@@ -13,48 +13,47 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class StatisticsProgramTest {
 
+    private static final List<String> FIELDS = List.of("developer", "yearReleased", "genre");
+
+    private StatisticsProgram statisticsProgram;
+    private Path dir;
     @Mock
     private JsonFileStatistics jsonFileStatistics;
-
     @Mock
     private XmlParser xmlParser;
 
-    private static final List<String> FIELDS = List.of("developer", "yearReleased", "genre");
-    private static StatisticsProgram statisticsProgram;
-    private static Path dir;
+
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        statisticsProgram = new StatisticsProgram(jsonFileStatistics, xmlParser);
     }
 
     @Test
     public void testCorrectFolder() throws IOException {
         String folder = "test2";
         dir = Files.createDirectory(Path.of(folder));
-        statisticsProgram = new StatisticsProgram(folder, "developer", jsonFileStatistics, xmlParser);
 
-        assertDoesNotThrow(() -> statisticsProgram.checkForCorrectFolder());
+        assertDoesNotThrow(() -> statisticsProgram.folderValidation(dir));
 
         Files.delete(dir);
     }
 
     @Test
-    public void testFolderDoesNOtExist() throws IOException {
+    public void testFolderDoesNOtExist() {
         String folder = "test2";
         Path dir = Paths.get(folder);
-        statisticsProgram = new StatisticsProgram(folder, "developer", jsonFileStatistics, xmlParser);
 
-        assertThatThrownBy(() -> statisticsProgram.checkForCorrectFolder())
+        assertThatThrownBy(() -> statisticsProgram.folderValidation(dir))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Folder " + dir + " does not exist");
     }
@@ -63,9 +62,8 @@ public class StatisticsProgramTest {
     public void testNonDirectoryFolder() throws IOException {
         String folder = "test2.txt";
         dir = Files.createFile(Path.of(folder));
-        statisticsProgram = new StatisticsProgram(folder, "developer", jsonFileStatistics, xmlParser);
 
-        assertThatThrownBy(() -> statisticsProgram.checkForCorrectFolder())
+        assertThatThrownBy(() -> statisticsProgram.folderValidation(dir))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Folder " + dir + " is not a directory");
 
@@ -78,18 +76,8 @@ public class StatisticsProgramTest {
         String attribute = "developer";
         dir = Files.createDirectory(Path.of(folder));
 
-        statisticsProgram = new StatisticsProgram(folder, attribute, jsonFileStatistics, xmlParser);
-
-        boolean correct = false;
-        for (String field : FIELDS) {
-            if (field.equals(attribute)) {
-                correct = true;
-                break;
-            }
-        }
-
-        assertThat(correct).isTrue();
-        assertDoesNotThrow(() -> statisticsProgram.checkForCorrectAttribute());
+        assertThat(FIELDS.contains(attribute)).isTrue();
+        assertDoesNotThrow(() -> statisticsProgram.attributeValidation(attribute));
 
         Files.delete(dir);
     }
@@ -100,18 +88,8 @@ public class StatisticsProgramTest {
         String attribute = "dev";
         dir = Files.createDirectory(Path.of(folder));
 
-        statisticsProgram = new StatisticsProgram(folder, attribute, jsonFileStatistics, xmlParser);
-
-        boolean correct = false;
-        for (String field : FIELDS) {
-            if (field.equals(attribute)) {
-                correct = true;
-                break;
-            }
-        }
-
-        assertThat(correct).isFalse();
-        assertThatThrownBy(() -> statisticsProgram.checkForCorrectAttribute())
+        assertThat(FIELDS.contains(attribute)).isFalse();
+        assertThatThrownBy(() -> statisticsProgram.attributeValidation(attribute))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Attribute " + attribute + " does not exist. \n" +
                         "Available fields are: developer, yearReleased, genre");
@@ -134,13 +112,20 @@ public class StatisticsProgramTest {
         when(xmlParser.parseStatsToXmlFile(eq(mockStats), eq("developer")))
                 .thenReturn("stats.xml");
 
-        statisticsProgram = new StatisticsProgram(folder, "developer", jsonFileStatistics, xmlParser);
-
-        statisticsProgram.start();
+        statisticsProgram.start(folder, "developer");
 
         verify(jsonFileStatistics).collectStats(dir, "developer");
         verify(xmlParser).parseStatsToXmlFile(mockStats, "developer");
 
         Files.delete(dir);
+    }
+
+    @Test
+    void testMainWithInsufficientArguments() {
+        String[] insufficientArgs = {"developer"};
+
+        assertThatThrownBy(() -> StatisticsProgram.main(insufficientArgs))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Not enough arguments");
     }
 }

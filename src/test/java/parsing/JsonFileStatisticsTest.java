@@ -18,10 +18,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
 public class JsonFileStatisticsTest {
-    static JsonFileStatistics jfs;
-    static Path dir;
-    static Path file;
-    static final String json = """
+
+    static final String JSON = """
             [
               {
                 "title": "The Legend of Zelda: Breath of the Wild",
@@ -31,13 +29,17 @@ public class JsonFileStatisticsTest {
               }
             ]""";
 
+    static Path dir;
+    static Path file;
+
+    private JsonFileStatistics jfs;
 
     @BeforeAll
     static void setUpBeforeClass() {
         try {
             dir = Files.createDirectory(Path.of("testDir"));
             file = Files.createFile(Path.of("testDir\\testFile.json"));
-            Files.write(file, json.getBytes());
+            Files.write(file, JSON.getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -116,6 +118,5 @@ public class JsonFileStatisticsTest {
         JsonParser jsonParser = mock(JsonParser.class);
         doThrow(new IOException("Simulated IOException")).when(jsonParser).nextToken();
         assertThrows(IOException.class, jsonParser::nextToken);
-
     }
 }
