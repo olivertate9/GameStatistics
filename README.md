@@ -2,14 +2,29 @@
 
 This program is designed to collect statistics from JSON files within a specified folder and generate XML reports based on attributes such as "developer", "yearReleased", and "genre".
 
-### Prerequisites
+### Main entity: Game
+
+Attributes:
+
+1. Title
+2. Developer: references another entity Developer
+3. Year Released
+4. Genre: Strings separated by comma
+
+### Secondary entity: Developer
+
+Attributes:
+
+1. Name
+
+## Prerequisites
 
 Before running this program, ensure you have the following installed on your system:
 
 * Java Development Kit (JDK) version 17 or higher
 * Apache Maven (for building the project)
 
-### Installation
+## Installation
 
 1. Clone the repository to your local machine:
 
@@ -20,7 +35,7 @@ Before running this program, ensure you have the following installed on your sys
 
    `mvn clean install`
 
-### Usage
+## Usage
 
 To use this program, you have two options:
 
@@ -37,7 +52,7 @@ To use this program, you have two options:
 
 **_Note_** Possible attributes is : `developer, genre, yearReleased`
 
-### Error Handling
+## Error Handling
 
 If you provide incorrect or insufficient command-line arguments, the program will throw an IllegalArgumentException with an error message indicating the issue.
 
@@ -45,7 +60,7 @@ If the specified folder does not exist or is not a valid directory, the program 
 
 If the specified attribute is not one of the supported fields (developer, yearReleased, genre), the program will throw an InvalidAttributeException.
 
-### Examples:
+## Examples:
 Input file example are located in:
 
 `src/main/resources/json`
@@ -54,7 +69,7 @@ Output file example are located in(run the program at least once):
 `src/main/resources`
 
 
-### ThreadPool comparison(average of 3 attempts each):
+## ThreadPool comparison(average of 3 attempts each):
 Test data: 100 JSON files, each one contains 100000 objects.
 
 Number of threads - 1: 123471 milliseconds
