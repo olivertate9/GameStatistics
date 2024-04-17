@@ -1,3 +1,5 @@
+import exceptions.InvalidAttributeException;
+import exceptions.InvalidFolderException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -5,7 +7,10 @@ import org.mockito.MockitoAnnotations;
 import parsing.JsonFileStatistics;
 import parsing.XmlParser;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,15 +18,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class StatisticsProgramTest {
 
-    private static final List<String> FIELDS = List.of("developer", "yearReleased", "genre");
+    static final List<String> FIELDS = List.of("developer", "yearReleased", "genre");
+    static final String JSON = """
+            [
+              {
+                "title": "The Legend of Zelda: Breath of the Wild",
+                "developer": { "name": "Nintendo EPD" },
+                "yearReleased": 2017,
+                "genre": "Action, Adventure"
+              }
+            ]""";
 
     private StatisticsProgram statisticsProgram;
     private Path dir;
@@ -29,8 +45,6 @@ public class StatisticsProgramTest {
     private JsonFileStatistics jsonFileStatistics;
     @Mock
     private XmlParser xmlParser;
-
-
 
     @BeforeEach
     void setUp() {
@@ -54,7 +68,7 @@ public class StatisticsProgramTest {
         Path dir = Paths.get(folder);
 
         assertThatThrownBy(() -> statisticsProgram.folderValidation(dir))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(InvalidFolderException.class)
                 .hasMessageContaining("Folder " + dir + " does not exist");
     }
 
@@ -64,7 +78,7 @@ public class StatisticsProgramTest {
         dir = Files.createFile(Path.of(folder));
 
         assertThatThrownBy(() -> statisticsProgram.folderValidation(dir))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(InvalidFolderException.class)
                 .hasMessageContaining("Folder " + dir + " is not a directory");
 
         Files.delete(dir);
@@ -90,7 +104,7 @@ public class StatisticsProgramTest {
 
         assertThat(FIELDS.contains(attribute)).isFalse();
         assertThatThrownBy(() -> statisticsProgram.attributeValidation(attribute))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(InvalidAttributeException.class)
                 .hasMessageContaining("Attribute " + attribute + " does not exist. \n" +
                         "Available fields are: developer, yearReleased, genre");
 
@@ -117,6 +131,35 @@ public class StatisticsProgramTest {
         verify(jsonFileStatistics).collectStats(dir, "developer");
         verify(xmlParser).parseStatsToXmlFile(mockStats, "developer");
 
+        Files.delete(dir);
+    }
+
+    @Test
+    void testMain() throws IOException {
+        Path file;
+        try {
+            dir = Files.createDirectory(Path.of("testDir"));
+            file = Files.createFile(Path.of("testDir\\testFile.json"));
+            Files.write(file, JSON.getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintStream originalOut = System.out;
+        System.setOut(new PrintStream(outputStream, true, StandardCharsets.UTF_8));
+
+        String[] args = {"testDir", "genre"};
+        StatisticsProgram.main(args);
+
+        System.setOut(originalOut);
+
+        String consoleOutput = outputStream.toString(StandardCharsets.UTF_8);
+        assertTrue(consoleOutput.contains("Collecting stats..."));
+        assertTrue(consoleOutput.contains("Statistics collected"));
+
+        Files.delete(file);
+        Files.delete(Path.of("src/main/resources/statistics_by_genre.xml"));
         Files.delete(dir);
     }
 

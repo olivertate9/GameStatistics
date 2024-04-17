@@ -11,6 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class XmlParserTest {
 
+    private static final String XML_FILE = "src\\main\\resources\\statistics_by_developer.xml";
+
     @Test
     void testParseStatsToFileSuccess() throws IOException {
         Map<String, Integer> stats = Map.of("Developer 1", 2, "Developer 2", 5);
@@ -22,7 +24,7 @@ class XmlParserTest {
 
         boolean exists = Files.exists(filePath);
 
-        assertThat(fileName).isEqualTo("statistics_by_developer.xml");
+        assertThat(fileName).isEqualTo(XML_FILE);
         assertThat(exists).isTrue();
 
         Files.delete(filePath);

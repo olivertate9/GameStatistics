@@ -1,6 +1,8 @@
 package parsing;
 
 import com.fasterxml.jackson.core.JsonParser;
+import exceptions.InvalidFolderException;
+import exceptions.TaskExecutionException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +21,7 @@ import static org.mockito.Mockito.mock;
 
 public class JsonFileStatisticsTest {
 
-    static final String JSON = """
+    private static final String JSON = """
             [
               {
                 "title": "The Legend of Zelda: Breath of the Wild",
@@ -29,8 +31,8 @@ public class JsonFileStatisticsTest {
               }
             ]""";
 
-    static Path dir;
-    static Path file;
+    private static Path dir;
+    private static Path file;
 
     private JsonFileStatistics jfs;
 
@@ -82,7 +84,7 @@ public class JsonFileStatisticsTest {
         Path emptyDir = Files.createDirectory(Path.of("empty"));
 
         assertThatThrownBy(() -> jfs.collectStats(emptyDir, "genre"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(InvalidFolderException.class)
                 .hasMessageContaining("Folder " + emptyDir + " does not contain any files");
 
         Files.delete(emptyDir);
@@ -108,7 +110,7 @@ public class JsonFileStatisticsTest {
         }
 
         assertThatThrownBy(() -> jfs.collectStats(dir, "genre"))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(TaskExecutionException.class)
                 .hasMessageContaining("Failed to collect statistics");
         Files.delete(incorrectJson);
     }
@@ -116,7 +118,7 @@ public class JsonFileStatisticsTest {
     @Test
     void testJsonFileFailedToParse() throws IOException {
         JsonParser jsonParser = mock(JsonParser.class);
-        doThrow(new IOException("Simulated IOException")).when(jsonParser).nextToken();
-        assertThrows(IOException.class, jsonParser::nextToken);
+        doThrow(new TaskExecutionException("Simulated IOException", new Throwable())).when(jsonParser).nextToken();
+        assertThrows(TaskExecutionException.class, jsonParser::nextToken);
     }
 }
