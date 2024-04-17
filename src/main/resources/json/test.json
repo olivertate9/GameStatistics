@@ -1,0 +1,32 @@
+[
+  {
+    "title": "The Legend of Zelda: Breath of the Wild",
+    "developer": { "name": "Nintendo EPD" },
+    "yearReleased": 2017,
+    "genre": "Action, Adventure"
+  },
+  {
+    "title": "Red Dead Redemption 2",
+    "developer": { "name": "Rockstar Games" },
+    "yearReleased": 2018,
+    "genre": "Action, Adventure"
+  },
+  {
+    "title": "The Witcher 3: Wild Hunt",
+    "developer": { "name": "CD Projekt Red" },
+    "yearReleased": 2015,
+    "genre": "Action, RPG"
+  },
+  {
+    "title": "Super Mario Odyssey",
+    "developer": { "name": "Nintendo EPD" },
+    "yearReleased": 2017,
+    "genre": "Platformer"
+  },
+  {
+    "title": "God of War",
+    "developer": { "name": "Santa Monica Studio" },
+    "yearReleased": 2018,
+    "genre": "Action, Adventure"
+  }
+]
