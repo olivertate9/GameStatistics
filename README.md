@@ -24,7 +24,8 @@ Before running this program, ensure you have the following installed on your sys
 
 To use this program, you have two options:
 
-1. Open Run/Debug configuration in Intellij IDEA and pass program arguments here.
+1. Open Run/Debug configuration in Intellij IDEA and pass program arguments here.![CLIarguments](https://github.com/olivertate9/GameStatistics/assets/104451170/eef46d74-4808-4017-8148-a5752899ee58)
+
 
 2. Navigate to the project directory and open terminal here
 
