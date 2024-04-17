@@ -42,7 +42,7 @@ To use this program, you have two options:
 1. Open Run/Debug configuration in Intellij IDEA and pass program arguments here.![CLIarguments](https://github.com/olivertate9/GameStatistics/assets/104451170/eef46d74-4808-4017-8148-a5752899ee58)
 
 
-2. Navigate to the project directory and open terminal here
+2. Navigate to the project directory and open terminal here then run:
 
    `java -jar target/GameStatistics-1.0.jar src\main\resources\json genre`
 
